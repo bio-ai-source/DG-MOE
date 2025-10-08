@@ -1,7 +1,7 @@
 # DG-MoE
 ## Paper "DG-MoE: An Uncertainty-Aware Information Router for Robust Multimodal DTI Prediction"
 ### 'datasets' directory
-datasets: 
+datasets: https://zenodo.org/records/17297200
 
 Contain the benchmark dataset and biological knowledge of drugs and targets
 
