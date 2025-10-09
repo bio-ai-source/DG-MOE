@@ -11,7 +11,7 @@ Contain the benchmark dataset and biological knowledge of drugs and targets
     - python main.py 
 
 ### Requirements
-CALNet is tested to work under Python 3.10.14  
+DG-MOE is tested to work under Python 3.10.14  
 The required dependencies for CALNet are PyTorch, numpy, pandas, scipy, and scikit-learn.
 
 
