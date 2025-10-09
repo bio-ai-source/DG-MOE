@@ -7,7 +7,7 @@ Contain the benchmark dataset and biological knowledge of drugs and targets
 
 ### directory
 1. Contain source codes
-2. To predict DTIs by CALNet, run
+2. To predict DTIs by DG-MOE, run
     - python main.py 
 
 ### Requirements
