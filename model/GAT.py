@@ -39,7 +39,7 @@ class moleculeGAT(nn.Module):
 
     def forward(self, drug_batch):
         x, edge_index, batch = self.molecule_atomencoder(drug_batch.x.long()), drug_batch.edge_index, drug_batch.batch
-        x = torch.mean(x, dim=-2) 
+        x = torch.mean(x, dim=-2)  # Aggregate features for drug nodes
         layer_outputs = []
         xx = self.pool(x, batch)
         layer_outputs.append(xx.unsqueeze(1))
@@ -49,8 +49,8 @@ class moleculeGAT(nn.Module):
             if self.layer_norms is not None:
                 x = self.layer_norms[i](x)
             xx = self.pool(x, batch)
-            layer_outputs.append(xx.unsqueeze(1)) 
-        out = torch.cat(layer_outputs, dim=1)  # [batch_size, num_layers, out_channels]
+            layer_outputs.append(xx.unsqueeze(1))  
+        out = torch.cat(layer_outputs, dim=1) 
         out = out.mean(dim=1)
         return out
 
@@ -74,7 +74,7 @@ class proteinGAT(nn.Module):
 
         self.dropout_layer = nn.Dropout(p=dropout)
         if layer_norm:
-            self.layer_norms = nn.ModuleList([nn.LayerNorm(out_channels) for _ in range(num_layers)])  # out_channels
+            self.layer_norms = nn.ModuleList([nn.LayerNorm(out_channels) for _ in range(num_layers)]) 
         else:
             self.layer_norms = None
 
@@ -92,7 +92,6 @@ class proteinGAT(nn.Module):
                 x = self.layer_norms[i](x)
             xx = self.pool(x, batch)
             layer_outputs.append(xx.unsqueeze(1)) 
-        out = torch.cat(layer_outputs, dim=1)  # [batch_size, num_layers, out_channels]
-        # print(f'out shape (after concat): {out.shape}')
+        out = torch.cat(layer_outputs, dim=1) 
         out = out.mean(dim=1)
         return out
