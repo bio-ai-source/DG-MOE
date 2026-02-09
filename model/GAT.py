@@ -21,7 +21,6 @@ class moleculeGAT(nn.Module):
         self.layer_norm = layer_norm
         self.gat_layers = nn.ModuleList()
 
-        # 修改：设置 GATConv 层的 concat=False
         for i in range(num_layers):
             if i == 0:
                 self.gat_layers.append(
@@ -39,28 +38,18 @@ class moleculeGAT(nn.Module):
         self.pool = global_mean_pool
 
     def forward(self, drug_batch):
-        # print(f'drug_batch.x shape: {drug_batch.x.shape}')
         x, edge_index, batch = self.molecule_atomencoder(drug_batch.x.long()), drug_batch.edge_index, drug_batch.batch
-        x = torch.mean(x, dim=-2)  # Aggregate features for drug nodes
-        # print(f'x shape: {x.shape}')
-        # print(f'edge_index shape: {edge_index.shape}')
-        # print(f'batch: {batch}')
-        # print(f'batch shape: {batch.shape}')
-
+        x = torch.mean(x, dim=-2) 
         layer_outputs = []
         xx = self.pool(x, batch)
         layer_outputs.append(xx.unsqueeze(1))
-        # 遍历每一层
         for i in range(self.num_layers):
-            # 使用GATConv进行图卷积
             x = self.gat_layers[i](x, edge_index)
             x = self.dropout_layer(x)
             if self.layer_norms is not None:
                 x = self.layer_norms[i](x)
-            # print(f'xx shape (after GAT layer): {x.shape}')
             xx = self.pool(x, batch)
-            # print(f'xx shape (after pooling): {xx.shape}')
-            layer_outputs.append(xx.unsqueeze(1))  # 增加维度以便后续拼接
+            layer_outputs.append(xx.unsqueeze(1)) 
         out = torch.cat(layer_outputs, dim=1)  # [batch_size, num_layers, out_channels]
         out = out.mean(dim=1)
         return out
@@ -75,7 +64,6 @@ class proteinGAT(nn.Module):
         self.layer_norm = layer_norm
         self.gat_layers = nn.ModuleList()
 
-        # 修改：设置 GATConv 层的 concat=False
         for i in range(num_layers):
             if i == 0:
                 self.gat_layers.append(
@@ -94,22 +82,16 @@ class proteinGAT(nn.Module):
 
     def forward(self, protein_batch):
         x, edge_index, batch = protein_batch.x, protein_batch.edge_index, protein_batch.batch
-        # print(f'x shape: {x.shape}')
-        # print(f'edge_index shape: {edge_index.shape}')
         layer_outputs = []
         xx = self.pool(x, batch)
         layer_outputs.append(xx.unsqueeze(1))
-        # 遍历每一层
         for i in range(self.num_layers):
-            # 使用GATConv进行图卷积
             x = self.gat_layers[i](x, edge_index)
             x = self.dropout_layer(x)
             if self.layer_norms is not None:
                 x = self.layer_norms[i](x)
-            # print(f'xx shape (after GAT layer): {x.shape}')
             xx = self.pool(x, batch)
-            # print(f'xx shape (after pooling): {xx.shape}')
-            layer_outputs.append(xx.unsqueeze(1))  # 增加维度以便后续拼接
+            layer_outputs.append(xx.unsqueeze(1)) 
         out = torch.cat(layer_outputs, dim=1)  # [batch_size, num_layers, out_channels]
         # print(f'out shape (after concat): {out.shape}')
         out = out.mean(dim=1)
