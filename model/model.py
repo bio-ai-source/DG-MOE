@@ -65,85 +65,9 @@ class DTI(nn.Module):
         drug_embedding = drug_batch.dt.view(batch, 3072)
         protein_embedding = protein_batch.pt.view(batch, 3072)
         gene_embedding = protein_batch.gt.view(batch, 512)
-        # tensors = [drug_graph, protein_graph, drug_embedding, protein_embedding, gene_embedding, zero_tensor]
         tensors = [drug_graph, protein_graph, drug_embedding, protein_embedding, gene_embedding]
-
-        # print('drug_graph: ', drug_graph.shape)
-        # print('protein_graph: ', protein_graph.shape)
-        # print('drug_embedding: ', drug_embedding.shape)
-        # print('protein_embedding: ', protein_embedding.shape)
-        # print('gene_embedding: ', gene_embedding.shape)
-
-
         x, probs = self.fusion(*tensors)
-        # print(f'x shape : {x.shape}')
-        # print(f'probs: ', probs.shape)
-        # print(f'topk_indices : {topk_indices}')
-        #
-        # print(f'topk_indices : {topk_indices.shape}')
-
-        for j in range(self.layer_output-1):
+        for j in range(self.layer_output):
             x = torch.tanh(self.W_out[j](x))
         predicted = self.W_interaction(x)
-        # print(f'predicted shape : {predicted.shape}')
-        return predicted, probs, probs
-
-if __name__ == "__main__":
-    batch_size = 3
-    # Generate protein data (2 samples)
-
-
-    protein_pt = torch.randn(3072)  # Protein feature matrix of shape [241, 1280]
-    protein_gt = torch.randn(512)
-    protein_x1 = torch.randn(241, 1280)  # Protein feature matrix of shape [241, 1280]
-    protein_edge_index1 = torch.randint(0, 241, (2, 2436))  # Protein edge indices of shape [2, 2436]
-    protein_edge_index2 = torch.randint(0, 241, (2, 2436))  # Protein edge indices of shape [2, 2436]
-    protein_data1 = Data(x=protein_x1, edge_index=protein_edge_index1, pt = protein_pt, gt = protein_gt)
-    protein_data2 = Data(x=protein_x1, edge_index=protein_edge_index2, pt = protein_pt, gt = protein_gt)
-    protein_data3 = Data(x=protein_x1, edge_index=protein_edge_index2, pt = protein_pt, gt = protein_gt)
-
-    embedding_size = 512 * 9  # Valid indices range from 0 to 512*9-1
-    drug_x1 = torch.randint(0, embedding_size, (20, 9), dtype=torch.long)  # Drug feature matrix with integer indices
-    drug_edge_index1 = torch.randint(0, 20, (2, 44))  # Drug edge indices of shape [2, 44]
-    drug_data1 = Data(x=drug_x1, edge_index=drug_edge_index1, dt = protein_pt)  # Drug feature matrix with valid indices
-    drug_data2 = Data(x=drug_x1, edge_index=drug_edge_index1, dt = protein_pt)  # Drug feature matrix with valid indices
-
-    protein_data_list = [protein_data1, protein_data2, protein_data3]
-    drug_data_list = [drug_data1, drug_data2, drug_data2]
-
-    protein_loader = DataLoader(protein_data_list, batch_size=batch_size)
-    drug_loader = DataLoader(drug_data_list, batch_size=batch_size)
-
-    # Example of iterating over the DataLoader for proteins
-    for drug_batch, protein_batch in zip(drug_loader, protein_loader):
-        config = {
-            'drug_in_channels': 1024,
-            'drug_out_channels': 1024,
-            'protein_in_channels': 1280,
-            'protein_out_channels': 1280,
-            'num_heads': 3,
-            'num_layers': 4,
-            'dropout': 0.5,
-            'layer_output': 3
-        }
-        model = DTI(**config)
-
-        # model = DTI(drug_in_channels=1024,
-        #             drug_out_channels=1024,
-        #             protein_in_channels=1280,
-        #             protein_out_channels=1280,
-        #             num_heads=3,
-        #             num_layers=4,
-        #             dropout=0.5
-        #             )
-        x1, x2, result = model(drug_batch, protein_batch)
-        print(f'x1 shape: {x1.shape}')
-        print(f'x2 shape: {x2.shape}')
-        print(f'result: {result}')
-        print(f'result shape: {result.shape}')
-
-    # 对于1个drug和protein, shape类似如下:
-    # protein x shape: torch.Size([241, 1280])
-    # protein edge_index shape: torch.Size([2, 2436])
-    # drug node_feat shape: torch.Size([20, 9, 512])
-    # drug edge_index shape: torch.Size([2, 44])
+        return probs, predicted
