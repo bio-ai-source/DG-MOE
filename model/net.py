@@ -31,7 +31,7 @@ class GlobalGating(nn.Module):
         self.mlp_g = nn.Sequential(
             nn.Linear(feat_dim, mlp_hidden),
             nn.ReLU(inplace=True),
-            nn.Linear(mlp_hidden, num_experts)  # 输出 [B, 6]
+            nn.Linear(mlp_hidden, num_experts)  
         )
 
     def forward(self, context: torch.Tensor):
@@ -39,7 +39,6 @@ class GlobalGating(nn.Module):
         assert D == self.feat_dim, f"feat_dim mismatch: got D={D}, expected {self.feat_dim}"
         assert M == 5, f"expected 5 modalities, got {M}"
 
-        # C_avg = 所有模态特征均值: [B, D]
         C_avg = context.mean(dim=1)
 
         # 全局 gating logits: [B, 6]
@@ -64,23 +63,16 @@ class LocalGating(nn.Module):
     def forward(self, context: torch.Tensor):
         B, M, D = context.shape
         assert D == self.feat_dim, f"feat_dim mismatch: got D={D}, expected {self.feat_dim}"
-        x = context.reshape(B * M, 1, D)                     # [B*M, 1, D]
-        salient = F.adaptive_max_pool1d(x, self.pool_out)    # [B*M, 1, pool_out]
-        salient = salient.squeeze(1)                         # [B*M, pool_out]
-
-        c = self.mlp_L(salient).view(B, M)                   # [B, M]
-
-        i_idx = self.pairs_idx[:, 0]                         # [6]
-        j_idx = self.pairs_idx[:, 1]                         # [6]
-        g_local = c[:, i_idx] + c[:, j_idx]                  # [B, 6]
-
+        x = context.reshape(B * M, 1, D)                     
+        salient = F.adaptive_max_pool1d(x, self.pool_out)   
+        salient = salient.squeeze(1)                         
+        c = self.mlp_L(salient).view(B, M)                   
+        i_idx = self.pairs_idx[:, 0]                        
+        j_idx = self.pairs_idx[:, 1]                      
+        g_local = c[:, i_idx] + c[:, j_idx]                  
         ci = c[:, i_idx]
         cj = c[:, j_idx]
         weight = torch.stack([ci, cj], dim=-1)
-
-        # print('g_local： ', g_local)
-        # print('weight： ', weight.shape)
-
         return g_local, weight
 
 
